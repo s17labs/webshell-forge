@@ -151,6 +151,11 @@ async function build() {
     const project = await res.json();
     if (!res.ok) throw new Error(project.error || 'Scaffold failed');
 
+    const exportLink = $('export-link');
+    exportLink.href = `/api/export/${encodeURIComponent(project.id)}`;
+    $('result').hidden = false;
+    $('apk-link').hidden = true;
+
     setStatus('Building… (first run downloads Gradle + deps)');
     await new Promise((resolve, reject) => {
       const es = new EventSource(`/api/build/${encodeURIComponent(project.id)}`);
@@ -162,9 +167,10 @@ async function build() {
       es.addEventListener('done', (e) => {
         es.close();
         const { apkUrl, fileName } = JSON.parse(e.data);
-        $('apk-link').href = apkUrl;
-        $('apk-link').textContent = `⬇ ${fileName}`;
-        $('result').hidden = false;
+        const apkLink = $('apk-link');
+        apkLink.href = apkUrl;
+        apkLink.textContent = `⬇ ${fileName}`;
+        apkLink.hidden = false;
         setStatus('Build complete ✅');
         resolve();
       });

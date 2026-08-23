@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import * as p from '@clack/prompts';
-import { createApp, buildApp, copyApk, doctor, derivePackageId } from '@s17labs/forge-core';
+import { createApp, buildApp, copyApk, doctor, derivePackageId, exportRepo } from '@s17labs/forge-core';
 
 const s = p.spinner();
 
@@ -13,12 +13,14 @@ async function main() {
     message: 'What do you want to do?',
     options: [
       { value: 'create', label: 'Create a new app' },
+      { value: 'export', label: 'Export an existing project as CI-ready repo' },
       { value: 'doctor', label: 'Check build environment (doctor)' },
     ],
   });
 
   if (p.isCancel(command)) return bail();
   if (command === 'doctor') return runDoctor();
+  if (command === 'export') return runExport();
 
   const name = await p.text({
     message: 'App name',
@@ -110,6 +112,7 @@ async function main() {
 
   const doBuild = await p.confirm({ message: 'Build the APK now?', initialValue: true });
   if (p.isCancel(doBuild) || !doBuild) {
+    await maybeExport(result.projectDir);
     p.outro(`Done. Run "gradlew assembleDebug" inside ${result.projectDir} when ready.`);
     return;
   }
@@ -130,12 +133,83 @@ async function main() {
     });
     const dest = path.join(path.dirname(result.projectDir), result.apkFileName);
     copyApk(apkPath, dest);
-    p.outro(`✅ Built ${result.apkFileName}\n   ${dest}\n\nInstall with: adb install "${dest}"`);
+    p.outcome(`✅ ${result.apkFileName} → ${dest}`);
+    await maybeExport(result.projectDir);
+    p.outro(`Install with: adb install "${dest}"`);
   } catch (err) {
     p.log.error(err.message);
     p.note('Full log above. Common fixes: JDK 17 required; ANDROID_HOME must point at an SDK with platforms;android-35.');
     process.exitCode = 1;
   }
+}
+
+async function runExport() {
+  const sourceDir = await p.text({
+    message: 'Project directory (a scaffolded WebShell Forge project)',
+    placeholder: './projects/xxxxxx',
+    validate: (v) => {
+      const dir = path.resolve(v);
+      if (!fs.existsSync(path.join(dir, 'gradlew'))) return 'gradlew not found — is this a scaffolded project?';
+      return undefined;
+    },
+  });
+  if (p.isCancel(sourceDir)) return bail();
+  await maybeExport(path.resolve(sourceDir));
+  p.outro('Exported.');
+}
+
+async function maybeExport(sourceDir) {
+  const doExport = await p.confirm({
+    message: 'Export a CI-ready repo? (.zip-free folder + GitHub Actions workflow that builds the APK)',
+    initialValue: false,
+  });
+  if (p.isCancel(doExport) || !doExport) return;
+
+  const defaultOut = `${sourceDir}-android`;
+  const outDir = await p.text({
+    message: 'Export directory',
+    placeholder: defaultOut,
+    defaultValue: defaultOut,
+  });
+  if (p.isCancel(outDir)) return;
+
+  try {
+    const info = readProjectInfo(sourceDir);
+    exportRepo({
+      sourceDir,
+      outDir: path.resolve(outDir),
+      appName: info.name,
+      description: info.description,
+      packageName: info.packageName,
+      versionName: info.versionName,
+    });
+
+    s.start('Preparing export…');
+    s.stop('CI-ready repo exported');
+    p.log.info(
+      `Push it to GitHub and Actions will build your APK:\n` +
+        `  cd ${path.resolve(outDir)}\n` +
+        `  git init -b main && git add -A && git commit -m "Initial import from WebShell Forge"\n` +
+        `  gh repo create <name> --public --source . --push`,
+    );
+  } catch (err) {
+    p.log.error(`Export failed: ${err.message}`);
+  }
+}
+
+function readProjectInfo(projectDir) {
+  let name = '';
+  let description = '';
+  const appJson = path.join(projectDir, 'app/src/main/assets/www/app.json');
+  if (fs.existsSync(appJson)) {
+    const parsed = JSON.parse(fs.readFileSync(appJson, 'utf8'));
+    name = parsed.name || '';
+    description = parsed.description || '';
+  }
+  const gradle = fs.readFileSync(path.join(projectDir, 'app/build.gradle.kts'), 'utf8');
+  const packageName = /applicationId\s*=\s*"([^"]+)"/.exec(gradle)?.[1] ?? '';
+  const versionName = /versionName\s*=\s*"([^"]+)"/.exec(gradle)?.[1] ?? '';
+  return { name, description, packageName, versionName };
 }
 
 async function runDoctor() {

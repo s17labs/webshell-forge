@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
-import { createApp, buildApp, copyApk } from '@s17labs/forge-core';
+import { createApp, buildApp, copyApk, exportRepo, zipDirectory } from '@s17labs/forge-core';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -128,6 +128,41 @@ app.get('/api/apk/:id', (req, res) => {
     res.download(src, meta.apkFileName);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/export/:id', (req, res) => {
+  let tmp;
+  try {
+    const id = req.params.id;
+    const dir = projectPath(id);
+    const appJsonPath = path.join(dir, 'app', 'src', 'main', 'assets', 'www', 'app.json');
+    const info = fs.existsSync(appJsonPath)
+      ? JSON.parse(fs.readFileSync(appJsonPath, 'utf8'))
+      : {};
+    const meta = readMeta(id);
+
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-export-'));
+    const repoDir = path.join(tmp, 'repo');
+    exportRepo({
+      sourceDir: dir,
+      outDir: repoDir,
+      appName: info.name || meta.packageName,
+      description: info.description || '',
+      packageName: meta.packageName,
+      versionName: meta.versionName,
+    });
+
+    const zipName = `${meta.apkFileName.replace(/-v.*-debug\.apk$/, '')}-android.zip`;
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${zipName}"`,
+    });
+    res.send(zipDirectory(repoDir));
+  } catch (err) {
+    if (!res.headersSent) res.status(400).json({ error: err.message });
+  } finally {
+    if (tmp) fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
 

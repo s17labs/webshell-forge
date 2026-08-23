@@ -12,6 +12,8 @@ export { stampIcon } from './icons.js';
 export { writeWebAssets } from './www.js';
 export { buildApp, copyApk } from './build.js';
 export { doctor } from './doctor.js';
+export { exportRepo } from './export.js';
+export { zipDirectory, readZipEntries, crc32 } from './zip.js';
 export {
   derivePackageId,
   slugify,

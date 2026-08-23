@@ -117,7 +117,7 @@ input[type="file"] { color: var(--muted); }
 
 .actions { display: flex; align-items: center; gap: 14px; margin: 4px 0 14px; }
 
-button.primary, .btn-link {
+button.primary, .btn-link, .btn-secondary {
   background: var(--accent);
   border: none;
   color: #fff;
@@ -127,8 +127,9 @@ button.primary, .btn-link {
   padding: 11px 22px;
   cursor: pointer;
 }
+.btn-secondary { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
 button.primary:disabled { opacity: 0.5; cursor: wait; }
-.btn-link { text-decoration: none; display: inline-block; }
+.btn-link, .btn-secondary { text-decoration: none; display: inline-block; }
 
 #build-status.ok { color: var(--accent-2); }
 #build-status.err { color: var(--danger); font-family: var(--mono); white-space: pre-wrap; }
@@ -142,7 +143,7 @@ button.primary:disabled { opacity: 0.5; cursor: wait; }
   color: var(--muted);
 }
 
-#result { margin: 10px 0 18px; display: flex; gap: 12px; align-items: baseline; }
+#result { margin: 10px 0 18px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 
 #preview-panel {
   position: sticky;

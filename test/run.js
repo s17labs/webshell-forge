@@ -118,3 +118,65 @@ test('failed scaffold cleans up its directory', async () => {
   await assert.rejects(() => forge.createApp({ name: 'X', html: '', outputDir: out }));
   assert.ok(!fs.existsSync(out), 'staging dir should be removed on failure');
 });
+
+test('exportRepo produces a clean CI-ready repo', async () => {
+  const base = tmpDir('forge-export');
+  const staged = path.join(base, 'staged');
+  await forge.createApp({
+    name: 'Export App',
+    description: 'exported to CI',
+    ...SAMPLE,
+    outputDir: staged,
+  });
+  // simulate build artifacts that must not leak into the export
+  fs.mkdirSync(path.join(staged, 'app/build/outputs/apk/debug'), { recursive: true });
+  fs.writeFileSync(path.join(staged, 'app/build/outputs/apk/debug/app-debug.apk'), 'fake');
+  fs.writeFileSync(path.join(staged, '.forge-meta.json'), '{}');
+
+  const out = path.join(base, 'export-app-android');
+  const r = forge.exportRepo({
+    sourceDir: staged,
+    outDir: out,
+    appName: 'Export App',
+    description: 'exported to CI',
+    packageName: 'com.webshellforge.exportapp',
+    versionName: '1.0.0',
+  });
+
+  assert.equal(r.outDir, out);
+  assert.ok(fs.existsSync(path.join(out, '.github/workflows/build.yml')));
+  const workflow = fs.readFileSync(path.join(out, '.github/workflows/build.yml'), 'utf8');
+  assert.match(workflow, /gradlew assembleDebug/);
+  assert.match(workflow, /upload-artifact/);
+  assert.ok(fs.existsSync(path.join(out, 'app/src/main/assets/www/index.html')));
+  assert.equal(fs.existsSync(path.join(out, 'app/build')), false, 'build dir must be excluded');
+  assert.equal(fs.existsSync(path.join(out, '.forge-meta.json')), false, 'meta must be excluded');
+  assert.match(fs.readFileSync(path.join(out, 'README.md'), 'utf8'), /# Export App/);
+  const mode = fs.statSync(path.join(out, 'gradlew')).mode & 0o111;
+  assert.ok(mode, 'gradlew must stay executable');
+
+  assert.throws(
+    () => forge.exportRepo({ sourceDir: base, outDir: path.join(base, 'nope') }),
+    /Not a WebShell Forge project/,
+  );
+});
+
+test('zipDirectory round-trips through readZipEntries', async () => {
+  const base = tmpDir('forge-zip-src');
+  fs.mkdirSync(path.join(base, 'nested/deep'), { recursive: true });
+  fs.writeFileSync(path.join(base, 'a.txt'), 'hello zip');
+  fs.writeFileSync(path.join(base, 'nested/b.txt'), 'x'.repeat(5000));
+  fs.writeFileSync(path.join(base, 'nested/deep/c.bin'), Buffer.from([0, 1, 2, 255, 254, 0]));
+
+  const zipBuf = forge.zipDirectory(base);
+  const entries = forge.readZipEntries(zipBuf);
+  const byName = Object.fromEntries(entries.map((e) => [e.name, e.data]));
+
+  assert.deepEqual(
+    entries.map((e) => e.name).sort(),
+    ['a.txt', 'nested/b.txt', 'nested/deep/c.bin'],
+  );
+  assert.equal(byName['a.txt'].toString(), 'hello zip');
+  assert.equal(byName['nested/b.txt'].length, 5000);
+  assert.deepEqual([...byName['nested/deep/c.bin']], [0, 1, 2, 255, 254, 0]);
+});

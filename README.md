@@ -106,13 +106,33 @@ The repo's own CI proves the full pipeline on every push: unit tests, then it sc
 - Download the latest sample APK: **Actions → CI → latest run → Artifacts**
 - Rebuild on demand via the workflow's **Run workflow** button (`workflow_dispatch`)
 
-You can also build *your* generated app in CI: scaffold locally (`npm start` or `forge create`), then push/copy the generated `projects/<id>/` folder into any repo and run:
+You can also build *your* generated app in CI: scaffold locally (`npm start` or `forge create`), then use **export** and push:
 
-```yaml
-- uses: actions/setup-java@v4
-  with: { distribution: temurin, java-version: "17" }
-- run: ./gradlew assembleDebug --no-daemon
+### `forge export`
+
+Turns any scaffolded project into a ready-to-push repo with its own CI baked in:
+
+```bash
+forge create          # …answer prompts; say yes to "Export a CI-ready repo?"
+# or later, for an existing scaffolded project:
+forge export          # point it at ./projects/<id>
 ```
+
+The exported folder contains the full Android project **plus**:
+
+- `.github/workflows/build.yml` — builds a debug APK on every push (and manual dispatch) and uploads it as an artifact
+- `README.md` — your name/description, build instructions, badge placeholder
+- clean `.gitignore`; no build outputs, no forge metadata
+
+Push it anywhere with Git and the APK appears under Actions artifacts:
+
+```bash
+cd <exported-folder>
+git init -b main && git add -A && git commit -m "Initial import from WebShell Forge"
+gh repo create my-app --public --source . --push
+```
+
+In the dashboard, the same thing is the **⬇ CI-ready repo (.zip)** button after scaffolding.
 
 ## Development
 

@@ -14,6 +14,7 @@
   "scripts": {
     "start": "node packages/dashboard/server.js",
     "forge": "node packages/cli/src/index.js",
+    "sample": "node scripts/e2e-scaffold.mjs",
     "test": "node test/run.js"
   }
 }

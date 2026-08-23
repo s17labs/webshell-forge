@@ -1,5 +1,7 @@
 # 🔨 WebShell Forge
 
+[![CI](https://github.com/s17labs/webshell-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/s17labs/webshell-forge/actions/workflows/ci.yml)
+
 **Build native Android apps locally from plain HTML, CSS, and JavaScript.**
 
 You provide: an app name, a description, an icon, and your code.
@@ -96,6 +98,21 @@ java -version   # if this fails inside proot, try PROOT_NO_SECCOMP=1 java -versi
 ```
 
 If Java runs, `npm run forge` works end-to-end on-device — expect slow first builds (~5–15 min while Gradle + dependencies download; cached afterwards). If your container blocks JIT memory mapping, builds must run on a desktop until we ship a JVM-free pipeline.
+
+## Building with CI (no local Java needed)
+
+The repo's own CI proves the full pipeline on every push: unit tests, then it scaffolds the sample app from the vendored template and runs `./gradlew assembleDebug` on GitHub-hosted runners. The resulting APK is uploaded as the **`forge-sample-debug-apk` artifact**.
+
+- Download the latest sample APK: **Actions → CI → latest run → Artifacts**
+- Rebuild on demand via the workflow's **Run workflow** button (`workflow_dispatch`)
+
+You can also build *your* generated app in CI: scaffold locally (`npm start` or `forge create`), then push/copy the generated `projects/<id>/` folder into any repo and run:
+
+```yaml
+- uses: actions/setup-java@v4
+  with: { distribution: temurin, java-version: "17" }
+- run: ./gradlew assembleDebug --no-daemon
+```
 
 ## Development
 

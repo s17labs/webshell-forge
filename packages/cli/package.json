@@ -1,0 +1,14 @@
+{
+  "name": "@s17labs/forge-cli",
+  "version": "0.1.0",
+  "description": "Interactive CLI for WebShell Forge.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "forge": "./src/index.js"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "@s17labs/forge-core": "*"
+  }
+}

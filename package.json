@@ -1,0 +1,19 @@
+{
+  "name": "webshell-forge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Build native Android apps locally from plain HTML/CSS/JS, powered by s17labs/webshell.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node packages/dashboard/server.js",
+    "forge": "node packages/cli/src/index.js",
+    "test": "node test/run.js"
+  }
+}

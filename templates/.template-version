@@ -1,0 +1,4 @@
+source: https://github.com/s17labs/webshell
+commit: cc27274cb1d2e7eb254a45d5b313360414032e38
+vendored: 2026-08-23
+license: MIT (see templates/webshell/LICENSE)

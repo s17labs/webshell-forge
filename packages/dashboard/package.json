@@ -1,0 +1,10 @@
+{
+  "name": "@s17labs/forge-dashboard",
+  "version": "0.1.0",
+  "description": "Local web dashboard for WebShell Forge — form, live preview, build streaming.",
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

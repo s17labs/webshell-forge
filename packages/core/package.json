@@ -1,0 +1,11 @@
+{
+  "name": "@s17labs/forge-core",
+  "version": "0.1.0",
+  "description": "Core scaffolding + stamping + build engine for WebShell Forge.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.js",
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}

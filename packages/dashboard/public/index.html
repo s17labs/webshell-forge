@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebShell Forge</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🐚🔨 WebShell Forge</h1>
+  <p class="sub">Build native Android apps locally from plain HTML/CSS/JS — powered by <a href="https://github.com/s17labs/webshell" target="_blank" rel="noreferrer">s17labs/webshell</a></p>
+</header>
+
+<main>
+  <section id="form-panel">
+    <details open class="card">
+      <summary>Identity</summary>
+      <div class="grid2">
+        <label>App name <input id="f-name" type="text" placeholder="My Cool App" required></label>
+        <label>Version <input id="f-version" type="text" value="1.0.0"></label>
+      </div>
+      <label>Description <textarea id="f-desc" rows="2" placeholder="What does your app do?"></textarea></label>
+      <label>Package ID <span class="hint">(optional — derived automatically)</span>
+        <input id="f-pkg" type="text" placeholder="com.webshellforge.mycoolapp"></label>
+    </details>
+
+    <details open class="card">
+      <summary>Icon <span class="hint">(optional · PNG / JPG / SVG / WEBP)</span></summary>
+      <div class="icon-row">
+        <img id="icon-preview" alt="" hidden>
+        <div class="grow">
+          <input id="f-icon" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/*">
+          <label>Background color <input id="f-icon-bg" type="color" value="#6200EE"></label>
+        </div>
+      </div>
+    </details>
+
+    <details open class="card">
+      <summary>Code</summary>
+      <div class="tabs">
+        <button data-tab="html" class="tab active">index.html</button>
+        <button data-tab="css" class="tab">style.css</button>
+        <button data-tab="js" class="tab">app.js</button>
+      </div>
+      <textarea id="code-html" class="code active" spellcheck="false"></textarea>
+      <textarea id="code-css" class="code" spellcheck="false"></textarea>
+      <textarea id="code-js" class="code" spellcheck="false"></textarea>
+    </details>
+
+    <div class="actions">
+      <button id="btn-build" class="primary">Build APK</button>
+      <span id="build-status" aria-live="polite"></span>
+    </div>
+
+    <pre id="console" class="card" hidden></pre>
+    <div id="result" hidden>
+      <a id="apk-link" class="primary btn-link" download>⬇ Download APK</a>
+      <span class="hint">or install directly via adb / file manager</span>
+    </div>
+  </section>
+
+  <section id="preview-panel">
+    <div class="preview-head">
+      <strong>Live preview</strong>
+      <span class="hint">bridge calls are simulated in the browser</span>
+    </div>
+    <iframe id="preview" sandbox="allow-scripts" title="Live preview"></iframe>
+  </section>
+</main>
+
+<footer>
+  <span>vendored template: s17labs/webshell @ <span id="tpl-sha">…</span></span>
+  <span>100% local · no cloud builds</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

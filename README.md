@@ -145,12 +145,27 @@ npm run forge   # CLI
 Layout:
 
 ```
-templates/webshell/    vendored s17labs/webshell @ pinned SHA (.template-version)
-packages/core/         scaffolding, stamping, icons (sharp), build runner, env doctor
-packages/dashboard/    Express server + zero-dependency browser UI
-packages/cli/          @clack/prompts wizard (bin: forge)
-test/                  node:test suite
-projects/ dist/        local outputs (gitignored)
+webshell-forge/
+├── .github/workflows/ci.yml   CI: unit tests + E2E sample APK build (artifact upload)
+├── templates/
+│   ├── .template-version      pinned s17labs/webshell SHA + vendored date
+│   └── webshell/              full vendored template (the build substrate)
+├── packages/
+│   ├── core/src/
+│   │   ├── scaffold.js        copy template → staging dir
+│   │   ├── stamp.js           applicationId/version/app_name rewriting
+│   │   ├── icons.js           image → adaptive launcher icons (sharp)
+│   │   ├── www.js             assets/www assembly + bridge.js injection
+│   │   ├── build.js           gradlew runner + APK collection
+│   │   ├── export.js          CI-ready repo generator
+│   │   ├── zip.js             dependency-free zip writer/reader
+│   │   ├── doctor.js          JDK/SDK environment checks
+│   │   └── index.js           public API (createApp, buildApp, …)
+│   ├── dashboard/             Express server + zero-dependency browser UI
+│   └── cli/                   @clack/prompts wizard (bin: forge)
+├── scripts/e2e-scaffold.mjs   sample app scaffolder (npm run sample)
+├── test/run.js                node:test suite (no Java needed)
+└── projects/  dist/           local outputs (gitignored)
 ```
 
 ### Updating the vendored template

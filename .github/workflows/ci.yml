@@ -73,3 +73,5 @@ jobs:
           name: forge-sample-debug-apk
           path: dist/*.apk
           if-no-files-found: error
+          # Reproducible from its commit; no reason to keep it 90 days.
+          retention-days: 1
